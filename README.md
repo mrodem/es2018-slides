@@ -1,3 +1,5 @@
 # ECMAScript 2018
 
-Slides.
+Presentation of the new features of ES2018.
+
+Slides: https://mrodem.github.io/es2018-slides/
