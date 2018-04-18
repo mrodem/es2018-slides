@@ -1,0 +1,323 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+		<title>ECMAScript 2018</title>
+
+		<link rel="stylesheet" href="css/reveal.css">
+		<link rel="stylesheet" href="css/theme/black.css">
+
+		<!-- Theme used for syntax highlighting of code -->
+		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+		<!-- Printing and PDF exports -->
+		<script>
+			var link = document.createElement( 'link' );
+			link.rel = 'stylesheet';
+			link.type = 'text/css';
+			link.href = window.location.search.match( /print-pdf/gi ) ? 'css/print/pdf.css' : 'css/print/paper.css';
+			document.getElementsByTagName( 'head' )[0].appendChild( link );
+		</script>
+	</head>
+	<body>
+		<div class="reveal">
+			<div class="slides">
+				<section>
+					<h1>ECMAScript 2018</h1>
+					<p>What's new?</p>
+				</section>
+				<section>
+					<h2>TC39 process</h2>
+					<ul>
+						<li>Stage 0: Strawman</li>
+						<li>Stage 1: Proposal</li>
+						<li>Stage 2: Draft</li>
+						<li>Stage 3: Candidate</li>
+						<li>Stage 4: Finished</li>
+					</ul>
+				</section>
+				<section>
+					<h2>ES2018 features</h2>
+                    <ul>
+						<li>Asynchronous iteration</li>
+						<li>Rest/spread properties</li>
+						<li>RegExp named capture groups</li>
+						<li>RegExp unicode property escapes</li>
+						<li>RegExp lookbehind assertions</li>
+						<li>s(dotall) flag for regular expressions</li>
+						<li>Promise.prototype.finally()</li>
+						<li>Template literal revision</li>
+					</ul>
+					<p>Ref: <a href="http://2ality.com/2017/02/ecmascript-2018.html">http://2ality.com/2017/02/ecmascript-2018.html</a></p>
+				</section>
+				<section>
+                    <section>
+						<h2>Asynchronous iteration</h2>
+						<p>
+							Iterate over f.ex. lines of text or reading asynchronously
+							from a file or HTTP connection.
+						</p>
+					</section>
+					<section>
+						<h2>Synchronous iteration</h2>
+						<pre><code data-trim data-noescape>
+const foo = ['a', 'b'];
+const iterator = foo[Symbol.iterator]();
+iterator.next();
+// { value: 'a', done: false }
+iterator.next();
+// { value: 'b', done: false }
+iterator.next();
+// { value: undefined, done: true }
+                        </code></pre>
+					</section>
+					<section>
+						<h2>Not possible</h2>
+						<pre><code data-trim data-noescape>
+for (const line of readLinesFromFile(fileName)) {
+  console.log(line);
+}
+                        </code></pre>
+					</section>
+					<section>
+						<h2>Asynchronous iterator</h2>
+						<pre><code data-trim data-noescape>
+const asyncIterable = createAsyncIterable(['a', 'b']);
+const asyncIterator = asyncIterable[Symbol.asyncIterator]();
+asyncIterator.next()
+.then(iterResult1 => {
+  console.log(iterResult1); // { value: 'a', done: false }
+  return asyncIterator.next();
+})
+.then(iterResult2 => {
+  console.log(iterResult2); // { value: 'b', done: false }
+  return asyncIterator.next();
+})
+.then(iterResult3 => {
+  console.log(iterResult3); // { value: undefined, done: true }
+});
+                        </code></pre>
+					</section>
+					<section>
+						<h2>Using async/await</h2>
+						<pre><code data-trim data-noescape>
+async function f() {
+  const asyncIterable = createAsyncIterable(['a', 'b']);
+  const asyncIterator = asyncIterable[Symbol.asyncIterator]();
+  console.log(await asyncIterator.next());
+    // { value: 'a', done: false }
+  console.log(await asyncIterator.next());
+    // { value: 'b', done: false }
+  console.log(await asyncIterator.next());
+    // { value: undefined, done: true }
+}
+                        </code></pre>
+					</section>
+					<section>
+						<h2>for-await-of</h2>
+						<pre><code data-trim data-noescape>
+async function f() {
+  for await (const x of createAsyncIterable(['a', 'b'])) {
+    console.log(x);
+  }
+}
+// Output:
+// a
+// b
+                        </code></pre>
+					</section>
+					<section>
+						<h2>Creating an async iterable</h2>
+						<pre><code data-trim data-noescape>
+async function* createAsyncIterable(syncIterable) {
+  for (const elem of syncIterable) {
+    yield elem;
+  }
+}
+                        </code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+                        <h2>Rest/spread properties</h2>
+                        <p>Enables the rest operator (...) in:</p>
+                        <ul>
+							<li>Object destructoring</li>
+							<li>Object literals</li>
+						</ul>
+					</section>
+					<section>
+						<h2>Object destructoring</h2>
+						<pre><code data-trim data-noescape>
+const obj = { foo: 1, bar: 2, baz: 3 };
+const { foo, ...rest } = obj;
+// Same as:
+// const foo = 1;
+// const rest = { bar: 2, baz: 3 };
+                        </code></pre>
+					</section>
+					<section>
+						<h2>Object literals</h2>
+						<pre><code data-trim data-noescape>
+const obj = { foo: 1, bar: 2, baz: 3 };
+{ ...obj, qux: 4 }
+// { foo: 1, bar: 2, baz: 3, qux: 4 }
+                        </code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>RegExp named capture groups</h2>
+                        <p>Allows taking apart a string with a regular expression.</p>
+					</section>
+					<section>
+						<h2>Numbered capture groups (already possible)</h2>
+						<pre><code data-trim data-noescape>
+const RE_DATE = /([0-9]{4})-([0-9]{2})-([0-9]{2})/;
+
+const matchObj = RE_DATE.exec('1999-12-31');
+const year = matchObj[1]; // 1999
+const month = matchObj[2]; // 12
+const day = matchObj[3]; // 31
+                        </code></pre>
+					</section>
+					<section>
+						<h2>Named capture groups</h2>
+						<pre><code data-trim data-noescape>
+const RE_DATE = /(?&lt;year>[0-9]{4})-(?&lt;month>[0-9]{2})-(?&lt;day>[0-9]{2})/;
+
+const matchObj = RE_DATE.exec('1999-12-31');
+const year = matchObj.groups.year; // 1999
+const month = matchObj.groups.month; // 12
+const day = matchObj.groups.day; // 31
+                        </code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>RegExp unicode property escapes</h2>
+						<p>Allows matching characters by mentioning their Unicode character properties.</p>
+					</section>
+					<section>
+						<h2>Matching whitespace characters (already possible)</h2>
+						<pre><code data-trim data-noescape>
+const re = /^\s+$/u;
+re.test('\t \n\r');
+// true
+                        </code></pre>
+					</section>
+					<section>
+						<h2>Matching by Unicode character properties</h2>
+						<pre><code data-trim data-noescape>
+const re = /^\p{Script=Greek}+$/u;
+re.test('μετά');
+// true
+                        </code></pre>
+                        <p><a href="http://2ality.com/2017/07/regexp-unicode-property-escapes.html">http://2ality.com/2017/07/regexp-unicode-property-escapes.html</a></p>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>RegExp lookbehind assertions</h2>
+						<p>Allows matching what precedes the current location.</p>
+					</section>
+					<section>
+						<h2>Lookahead assertions (already possible)</h2>
+						<pre><code data-trim data-noescape>
+const re = /aa(?=bb)/;
+const match = 'aabb'.match(re);
+console.log(match[0]);
+// 'aa'
+                        </code></pre>
+					</section>
+					<section>
+						<h2>Lookbehind assertions</h2>
+						<pre><code data-trim data-noescape>
+const re = /(?<=foo)bar/g;
+const match = 'foobar'.match(re);
+console.log(match[0]);
+// 'bar'
+                        </code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>s(dotAll) flag for regular expressions</h2>
+						<p>New regular expression flag that specifies that a '.' should match line terminators.</p>
+					</section>
+					<section>
+						<h2>Example that shows the /s flag</h2>
+						<pre><code data-trim data-noescape>
+/^.$/.test('\n');
+// false
+
+/^.$/s.test('\n');
+// true
+                        </code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>Promise.prototype.finally()</h2>
+						<p>For things that should always happen, regardless of success or failure.</p>
+					</section>
+					<section>
+						<h2>Structure</h2>
+						<pre><code data-trim data-noescape>
+promise
+.then(result => {···})
+.catch(error => {···})
+.finally(() => {···});
+                        </code></pre>
+					</section>
+					<section>
+						<h2>Use case</h2>
+						<pre><code data-trim data-noescape>
+let connection;
+db.open()
+.then(conn => {
+    connection = conn;
+    return connection.select({ name: 'Jane' });
+})
+.then(result => {
+    // Process result
+})
+.catch(error => {
+    // Handle errors
+})
+.finally(() => {
+    connection.close();
+});
+                        </code></pre>
+					</section>
+				</section>
+				<section>
+					<section>
+						<h2>Template Literal Revision</h2>
+						<p>Fixes a limitation related to template literals and escape characters.</p>
+						<p><a href="http://2ality.com/2016/09/template-literal-revision.html">http://2ality.com/2016/09/template-literal-revision.html</a></p>
+					</section>
+				</section>
+			</div>
+		</div>
+
+		<script src="lib/js/head.min.js"></script>
+		<script src="js/reveal.js"></script>
+
+		<script>
+			// More info about config & dependencies:
+			// - https://github.com/hakimel/reveal.js#configuration
+			// - https://github.com/hakimel/reveal.js#dependencies
+			Reveal.initialize({
+				dependencies: [
+					{ src: 'plugin/markdown/marked.js' },
+					{ src: 'plugin/markdown/markdown.js' },
+					{ src: 'plugin/notes/notes.js', async: true },
+					{ src: 'plugin/highlight/highlight.js', async: true, callback: function() { hljs.initHighlightingOnLoad(); } }
+				]
+			});
+		</script>
+	</body>
+</html>
