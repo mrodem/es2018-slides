@@ -56,8 +56,8 @@
                     <section>
 						<h2>Asynchronous iteration</h2>
 						<p>
-							Iterate over f.ex. lines of text or reading asynchronously
-							from a file or HTTP connection.
+							F.ex. when reading asynchronously from a file
+							or HTTP connection.
 						</p>
 					</section>
 					<section>
@@ -71,6 +71,17 @@ iterator.next();
 // { value: 'b', done: false }
 iterator.next();
 // { value: undefined, done: true }
+                        </code></pre>
+					</section>
+					<section>
+						<h2>Iterating with for-of</h2>
+						<pre><code data-trim data-noescape>
+let foo = ['a', 'b'];
+for (const value of foo) {
+  console.log(value);
+}
+// 'a'
+// 'b'
                         </code></pre>
 					</section>
 					<section>
