@@ -284,23 +284,20 @@ promise
                         </code></pre>
 					</section>
 					<section>
-						<h2>Use case</h2>
+						<h2>Example</h2>
 						<pre><code data-trim data-noescape>
-let connection;
-db.open()
-.then(conn => {
-    connection = conn;
-    return connection.select({ name: 'Jane' });
+let isLoading = true;
+
+fetch(myRequest).then(response => {
+  const contentType = response.headers.get("content-type");
+  if(contentType && contentType.includes("application/json")) {
+    return response.json();
+  }
+  throw new TypeError("Oops, we haven't got JSON!");
 })
-.then(result => {
-    // Process result
-})
-.catch(error => {
-    // Handle errors
-})
-.finally(() => {
-    connection.close();
-});
+.then(json => { /* process JSON further */ })
+.catch(error => { console.log(error); })
+.finally(() => { isLoading = false; });
                         </code></pre>
 					</section>
 				</section>
